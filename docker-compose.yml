@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  otel-collector:
+    build:
+      context: .
+      dockerfile: Dockerfile.otel-collector
+    ports:
+      - "4317:4317" # OTLP gRPC receiver
+      - "4318:4318" # OTLP HTTP receiver
+      - "8889:8889" # Prometheus metrics exposed
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+
+  prometheus:
+    build:
+      context: .
+      dockerfile: Dockerfile.prometheus
+    ports:
+      - "9090:9090"
+
+  loki:
+    build:
+      context: .
+      dockerfile: Dockerfile.loki
+    ports:
+      - "3100:3100"
+
+  tempo:
+    build:
+      context: .
+      dockerfile: Dockerfile.tempo
+    ports:
+      - "3200:3200"
+
+  grafana:
+    build:
+      context: .
+      dockerfile: Dockerfile.grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
